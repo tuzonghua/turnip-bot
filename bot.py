@@ -24,6 +24,7 @@ Hi! I'm Turnip Bot!
 
 initial_extensions = {
     'cogs.stonks',
+    'cogs.celeste',
 }
 
 
