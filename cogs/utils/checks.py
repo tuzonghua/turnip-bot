@@ -83,7 +83,15 @@ def is_in_guilds(*guild_ids):
 
 
 def is_dm():
-    def predicate(ctx):
-        return ctx.guild is None
+    """
+    Checks that the command was sent in DMs and fires a
+    warning if it isn't.
+    :return: bool
+    """
+    async def predicate(ctx):
+        if ctx.guild is not None:
+            await ctx.send("Please use that command in DMs!")
+            return False
+        return True
 
     return commands.check(predicate)
