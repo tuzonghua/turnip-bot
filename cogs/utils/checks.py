@@ -84,8 +84,6 @@ def is_in_guilds(*guild_ids):
 
 def is_dm():
     def predicate(ctx):
-        print(f'guild: {ctx.guild}')
-        if ctx.guild is not None:
-            return False
+        return ctx.guild is None
 
     return commands.check(predicate)
