@@ -1,3 +1,4 @@
+import logging
 import os
 
 import discord
@@ -14,14 +15,27 @@ MKT_BUY_CHAN = int(os.getenv('MARKETPLACE_BUY_CHAN_ID'))
 MKT_SELL_CHAN = int(os.getenv('MARKETPLACE_SELL_CHAN_ID'))
 MKT_TRADE_CHAN = int(os.getenv('MARKETPLACE_TRADE_CHAN_ID'))
 
+# Setup logging
+logger = logging.getLogger('discord')
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(filename='discord.log',
+                              encoding='utf-8',
+                              mode='w')
+formatter = logging.Formatter(
+    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
+    datefmt="%m/%d/%y %H:%M:%S")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+# Set bot prefix
 bot = commands.Bot(command_prefix="!")
 
 
 @bot.event
 async def on_ready():
-    print(f'{bot.user} running with the following credentials:')
-    print("Username:", bot.user.name)
-    print("Password:", bot.user.id)
+    logger.info("{} running with the following credentials:".format(bot.user))
+    logger.info("Username: {}".format(bot.user.name))
+    logger.info("Password: {}".format(bot.user.id))
     await bot.change_presence(activity=discord.Game(
         name="Direct Message !hello"))
 
@@ -35,10 +49,10 @@ async def hello(ctx):
         f"\n\n:one: — Host \n:two: — Buy, Sell or Trade",
         color=0xF4B400)
 
-    firstmessage = await ctx.author.send(embed=em)
+    first_message = await ctx.author.send(embed=em)
 
-    await firstmessage.add_reaction("1️⃣")
-    await firstmessage.add_reaction("2️⃣")
+    await first_message.add_reaction("1️⃣")
+    await first_message.add_reaction("2️⃣")
 
     try:
 
@@ -123,8 +137,7 @@ async def hello(ctx):
                              value=turnipmoreinfo,
                              inline=False)
 
-                await bot.get_guild(SERVER_ID).get_channel(DAISY_CHAN).send(
-                    embed=em)
+                await bot.get_channel(DAISY_CHAN).send(embed=em)
 
                 em = discord.Embed(
                     title="Turnip Stonks Bot",
@@ -192,8 +205,7 @@ async def hello(ctx):
                              value=turnipmoreinfo,
                              inline=False)
 
-                await bot.get_guild(SERVER_ID).get_channel(NOOKS_CHAN).send(
-                    embed=em)
+                await bot.get_channel(NOOKS_CHAN).send(embed=em)
 
                 em = discord.Embed(
                     title="Turnip Stonks Bot",
@@ -280,8 +292,7 @@ async def hello(ctx):
                              value=itemmoreinfo,
                              inline=False)
 
-                await bot.get_guild(SERVER_ID).get_channel(MKT_BUY_CHAN).send(
-                    embed=em)
+                await bot.get_channel(MKT_BUY_CHAN).send(embed=em)
 
                 em = discord.Embed(
                     title="Turnip Stonks Bot",
@@ -344,8 +355,7 @@ async def hello(ctx):
                              value=itemmoreinfo,
                              inline=False)
 
-                await bot.get_guild(SERVER_ID).get_channel(MKT_SELL_CHAN).send(
-                    embed=em)
+                await bot.get_channel(MKT_SELL_CHAN).send(embed=em)
 
                 em = discord.Embed(
                     title="Turnip Stonks Bot",
@@ -408,8 +418,7 @@ async def hello(ctx):
                              value=itemmoreinfo,
                              inline=False)
 
-                await bot.get_guild(SERVER_ID).get_channel(MKT_TRADE_CHAN
-                                                           ).send(embed=em)
+                await bot.get_channel(MKT_TRADE_CHAN).send(embed=em)
 
                 em = discord.Embed(
                     title="Turnip Stonks Bot",
@@ -437,7 +446,7 @@ async def hello(ctx):
         await ctx.author.send(
             "You took too long to respond! Please restart the process by using `!hello`"
         )
-        print(e)
+        logger.info(e)
 
 
 bot.run(BOT_TOKEN)
