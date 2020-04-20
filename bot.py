@@ -82,8 +82,8 @@ class TurnipBot(commands.Bot):
                           exc_info=1)
         elif isinstance(error, commands.ArgumentParsingError):
             await ctx.send(error)
-        else:
-            await ctx.send(error)
+        elif isinstance(error, commands.CheckFailure):
+            log.error(error)
 
     def get_guild_prefixes(self, guild, *, local_inject=_prefix_callable):
         proxy_msg = discord.Object(id=None)
