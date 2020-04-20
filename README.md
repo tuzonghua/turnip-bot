@@ -29,4 +29,6 @@ The code uses the dotenv package. First move `sample.env`
 to a dotfile `.env` in the same directory. Then edit the
 file with all the relevant secrets (guild ID, channel IDs,
 etc.).
- 
+
+## Run the bot
+Launch the bot by running `python launcher.py`
