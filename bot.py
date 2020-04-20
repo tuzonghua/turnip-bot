@@ -62,7 +62,7 @@ class TurnipBot(commands.Bot):
         for ext in initial_extensions:
             try:
                 self.load_extension(ext)
-            except Exception as e:
+            except Exception:
                 log.error('Failed to load extension %s.', ext, exc_info=1)
 
     async def on_socket_response(self, msg):
@@ -112,10 +112,9 @@ class TurnipBot(commands.Bot):
             pass
 
     async def on_ready(self):
-        if not hasattr(self, 'uptime'):
-            self.uptime = datetime.datetime.utcnow()
-
-        print(f'Ready: {self.user} (ID: {self.user.id})')
+        log.info(f'Ready: {self.user} (ID: {self.user.id})')
+        await self.change_presence(activity=discord.Game(
+            name="Direct Message !hello"))
 
     def log_spammer(self, ctx, message, retry_after, *, autoblock=False):
         guild_name = getattr(ctx.guild, 'name', 'No Guild (DMs)')
