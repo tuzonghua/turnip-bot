@@ -20,10 +20,9 @@ class Stonks(commands.Cog):
         self.thumbnail_url = 'https://i.imgur.com/xJOaRAP.png'
 
     async def cog_command_error(self, ctx, error):
-        if isinstance(error, commands.BadArgument):
-            await ctx.author.send(
-                "There was an error, please restart the process by using `!stonks`"
-            )
+        await ctx.author.send(
+            "There was an error, please restart the process by using `!stonks`"
+        )
 
     async def dialogue(self, ctx, buy=True):
         def msgcheck(m):
@@ -40,23 +39,22 @@ class Stonks(commands.Cog):
         em.set_thumbnail(url=self.thumbnail_url)
         await ctx.author.send(embed=em)
 
-        # Clunky validation loop that the price can only be a number
+        # Clunky validation loop to ensure price is a number
         turnip_price = None
-        retry = 0
-        while retry <= 5 and not turnip_price:
+        for i in range(5):
             message = await self.bot.wait_for('message',
                                               check=msgcheck,
                                               timeout=60)
             if message.content.isdigit():
                 turnip_price = message.content
                 break
-            elif retry >= 5:
-                raise commands.CommandError(
-                    "Too many retries, please restart the process.")
-            else:
-                await ctx.author.send(
-                    "Price can only be digits, please try again.")
-                retry += 1
+
+            await ctx.author.send(
+                f"Price can only be digits. {4 - i} tries remaining.")
+
+        if not turnip_price:
+            raise commands.CommandError(
+                "Too many retries, please restart the process.")
 
         em = discord.Embed(
             title="Turnip Stonks Bot",
