@@ -10,9 +10,15 @@ log = logging.getLogger(__name__)
 
 SERVER_ID = int(os.getenv('GUILD_ID'))
 CELESTE_CHAN = int(os.getenv('CELESTE_HOST_CHAN_ID'))
+REDD_CHAN = int(os.getenv('REDD_HOST_CHAN_ID'))
+
+npc_dict = {
+    'celeste': CELESTE_CHAN,
+    'redd': REDD_CHAN
+}
 
 
-class Celeste(commands.Cog):
+class Hosting(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.reaction_emojis = (u"\u0031\uFE0F\u20E3", u"\u0032\uFE0F\u20E3")
@@ -21,10 +27,10 @@ class Celeste(commands.Cog):
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.author.send(
-                "There was an error, please restart the process by using `!celeste`"
+                "There was an error, please restart the process by using `!hosting [celeste/redd]`"
             )
 
-    async def dialogue(self, ctx):
+    async def dialogue(self, ctx, npc):
         def msgcheck(m):
             return m.author == ctx.author
 
@@ -41,14 +47,14 @@ class Celeste(commands.Cog):
 
         em = discord.Embed(
             title="Turnip Stonks Bot",
-            description="Ok! Any more info (e.g., Celeste location)?",
+            description=f"Ok! Any more info (e.g., {npc.capitalize()} location)?",
             color=0xF4B400)
         em.set_thumbnail(url=self.thumbnail_url)
         await ctx.author.send(embed=em)
         message = await self.bot.wait_for('message',
                                           check=msgcheck,
                                           timeout=60)
-        celeste_location = message.content
+        npc_location = message.content
 
         em = discord.Embed(
             title="Turnip Stonks Bot",
@@ -75,10 +81,10 @@ class Celeste(commands.Cog):
                      value=turnip_url,
                      inline=False)
         em.add_field(name="More information:",
-                     value=celeste_location,
+                     value=npc_location,
                      inline=False)
 
-        await self.bot.get_channel(CELESTE_CHAN).send(embed=em)
+        await self.bot.get_channel(npc_dict[npc]).send(embed=em)
 
         em = discord.Embed(
             title="Turnip Stonks Bot",
@@ -92,12 +98,18 @@ class Celeste(commands.Cog):
                      value=turnip_url,
                      inline=False)
         em.add_field(name="More information:",
-                     value=celeste_location,
+                     value=npc_location,
                      inline=False)
 
         await ctx.author.send(embed=em)
 
-    @commands.command()
+    @commands.group()
+    @checks.is_dm()
+    async def hosting(self, ctx: commands.Context):
+        if ctx.invoked_subcommand is None:
+            await ctx.author.send('Invalid hosting command passed...')
+
+    @hosting.command()
     @checks.is_dm()
     async def celeste(self, ctx):
         """Let users host for Celeste"""
@@ -129,19 +141,19 @@ class Celeste(commands.Cog):
                                               timeout=60)
             reaction = str(payload.emoji)
             if reaction == self.reaction_emojis[0]:
-                await self.dialogue(ctx)
+                await self.dialogue(ctx, 'celeste')
             elif reaction == self.reaction_emojis[1]:
                 await ctx.author.send("Ok! Maybe another time!")
             else:
                 await ctx.author.send(
-                    "Invalid reaction. Please restart the process by using `!celeste`"
+                    "Invalid reaction. Please restart the process by using `!hosting celeste`"
                 )
         except asyncio.TimeoutError as e:
             await ctx.author.send(
-                "You took too long to respond! Please restart the process by using `!celeste`"
+                "You took too long to respond! Please restart the process by using `!hosting celeste`"
             )
             log.info(e)
 
 
 def setup(bot):
-    bot.add_cog(Celeste(bot))
+    bot.add_cog(Hosting(bot))
