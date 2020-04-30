@@ -12,10 +12,7 @@ SERVER_ID = int(os.getenv('GUILD_ID'))
 CELESTE_CHAN = int(os.getenv('CELESTE_HOST_CHAN_ID'))
 REDD_CHAN = int(os.getenv('REDD_HOST_CHAN_ID'))
 
-npc_dict = {
-    'celeste': CELESTE_CHAN,
-    'redd': REDD_CHAN
-}
+npc_dict = {'celeste': CELESTE_CHAN, 'redd': REDD_CHAN}
 
 
 class Hosting(commands.Cog):
@@ -47,7 +44,8 @@ class Hosting(commands.Cog):
 
         em = discord.Embed(
             title="Turnip Stonks Bot",
-            description=f"Ok! Any more info (e.g., {npc.capitalize()} location)?",
+            description=
+            f"Ok! Any more info (e.g., {npc.capitalize()} location)?",
             color=0xF4B400)
         em.set_thumbnail(url=self.thumbnail_url)
         await ctx.author.send(embed=em)
@@ -151,6 +149,51 @@ class Hosting(commands.Cog):
         except asyncio.TimeoutError as e:
             await ctx.author.send(
                 "You took too long to respond! Please restart the process by using `!hosting celeste`"
+            )
+            log.info(e)
+
+    @hosting.command()
+    @checks.is_dm()
+    async def redd(self, ctx):
+        """Let users host for Redd"""
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=
+            f"Hey <@{ctx.author.id}>!\n\nWant to invite some friends to buy some art?"
+            f"\n\n :one: - Yes! Let's go!\n:two: - On the other hand...maybe not.",
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        first_message = await ctx.author.send(embed=em)
+
+        for emoji in self.reaction_emojis:
+            await first_message.add_reaction(emoji)
+
+        def react_check(payload):
+            if payload.user_id != ctx.author.id:
+                return False
+
+            to_check = str(payload.emoji)
+            for emoji in self.reaction_emojis:
+                if to_check == emoji:
+                    return True
+            return False
+
+        try:
+            payload = await self.bot.wait_for('raw_reaction_add',
+                                              check=react_check,
+                                              timeout=60)
+            reaction = str(payload.emoji)
+            if reaction == self.reaction_emojis[0]:
+                await self.dialogue(ctx, 'redd')
+            elif reaction == self.reaction_emojis[1]:
+                await ctx.author.send("Ok! Maybe another time!")
+            else:
+                await ctx.author.send(
+                    "Invalid reaction. Please restart the process by using `!hosting redd`"
+                )
+        except asyncio.TimeoutError as e:
+            await ctx.author.send(
+                "You took too long to respond! Please restart the process by using `!hosting redd`"
             )
             log.info(e)
 
