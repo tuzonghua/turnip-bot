@@ -114,7 +114,8 @@ class TurnipBot(commands.Bot):
 
     async def on_ready(self):
         log.info(f'Ready: {self.user} (ID: {self.user.id})')
-        await self.change_presence(activity=discord.Game(name="!help"))
+        await self.change_presence(activity=discord.Game(
+            name="type !help for help!"))
 
     def log_spammer(self, ctx, message, retry_after, *, autoblock=False):
         guild_name = getattr(ctx.guild, 'name', 'No Guild (DMs)')
