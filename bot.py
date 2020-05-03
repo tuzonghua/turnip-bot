@@ -22,10 +22,7 @@ description = """
 Hi! I'm Turnip Bot!
 """
 
-initial_extensions = {
-    'cogs.stonks',
-    'cogs.hosting',
-}
+initial_extensions = {'cogs.stonks', 'cogs.hosting', 'cogs.market'}
 
 
 def _prefix_callable(bot, msg):
