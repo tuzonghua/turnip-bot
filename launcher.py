@@ -19,7 +19,7 @@ def setup_logging():
                                       encoding='utf-8',
                                       mode='w')
         formatter = logging.Formatter(
-            "[{asctime}] [{levelname:<7}][{lineno:<4}] {name}: {message}",
+            "[{asctime}] [{levelname:<7}][{filename}:{lineno:<4}] {name}: {message}",
             datefmt="%Y-%m-%d %H:%M:%S",
             style="{")
         handler.setFormatter(formatter)
