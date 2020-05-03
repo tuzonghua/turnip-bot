@@ -45,8 +45,8 @@ class Stonks(commands.Cog):
             message = await self.bot.wait_for('message',
                                               check=msgcheck,
                                               timeout=60)
-            if message.content.isdigit():
-                turnip_price = message.content
+            if message.cleant_content.isdigit():
+                turnip_price = message.clean_content
                 break
 
             await ctx.author.send(
@@ -69,7 +69,7 @@ class Stonks(commands.Cog):
         message = await self.bot.wait_for('message',
                                           check=msgcheck,
                                           timeout=60)
-        turnip_url = message.content
+        turnip_url = message.clean_content
 
         em = discord.Embed(
             title="Turnip Stonks Bot",
@@ -81,7 +81,7 @@ class Stonks(commands.Cog):
         message = await self.bot.wait_for('message',
                                           check=msgcheck,
                                           timeout=60)
-        turnip_more_info = message.content
+        turnip_more_info = message.clean_content
 
         em = discord.Embed(title="Turnip Stonks Bot",
                            description="",
