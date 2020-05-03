@@ -1,4 +1,5 @@
 import asyncio
+from enum import Enum
 import logging
 import os
 
@@ -12,24 +13,66 @@ SERVER_ID = int(os.getenv('GUILD_ID'))
 CELESTE_CHAN = int(os.getenv('CELESTE_HOST_CHAN_ID'))
 REDD_CHAN = int(os.getenv('REDD_HOST_CHAN_ID'))
 
-npc_dict = {'celeste': CELESTE_CHAN, 'redd': REDD_CHAN}
+
+class HostingChan(Enum):
+    CELESTE_HOST_CHAN_ID = 1
+    REDD_HOST_CHAN_ID = 2
+    SAHARAH_HOST_CHAN_ID = 3
+    LEIF_HOST_CHAN_ID = 4
 
 
 class Hosting(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.reaction_emojis = (u"\u0031\uFE0F\u20E3", u"\u0032\uFE0F\u20E3")
         self.thumbnail_url = 'https://i.imgur.com/xJOaRAP.png'
 
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.author.send(
-                "There was an error, please restart the process by using `!hosting [celeste/redd]`"
+                "There was an error, please restart the process by using `!hosting`"
             )
 
-    async def dialogue(self, ctx, npc):
-        def msgcheck(m):
-            return m.author == ctx.author
+    @commands.command()
+    @checks.is_dm()
+    async def hosting(self, ctx: commands.Context):
+        def msgcheck(m: discord.Message):
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        em_desc = (
+            f"Hey <@{ctx.author.id}>!\n\n"
+            f"Who are you hosting? Please enter a number from below:\n\n"
+            f"1. Celeste\n2. Redd\n"
+            f"3. Saharah\n4. Leif")
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description=em_desc,
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+
+        hosting_opt = 0
+        npc = None
+        for i in range(5):
+            try:
+                msg = await self.bot.wait_for('message',
+                                              check=msgcheck,
+                                              timeout=60)
+            except asyncio.TimeoutError as e:
+                await ctx.author.send(
+                    "You took too long to respond! Please restart the process by using `!market`"
+                )
+                log.info(e)
+            if msg.clean_content.isdigit() and 1 <= int(
+                    msg.clean_content) <= 4:
+                hosting_opt = HostingChan(int(msg.clean_content))
+                npc = hosting_opt.name.split("_")[0].capitalize()
+                break
+
+            num_tries = 4 - i
+            if num_tries == 0:
+                raise commands.CommandError("Too many retries")
+            await ctx.author.send(
+                f"Option can only be a digit between 1 and 4. {num_tries} tries remaining."
+            )
 
         em = discord.Embed(
             title="Turnip Stonks Bot",
@@ -37,22 +80,33 @@ class Hosting(commands.Cog):
             color=0xF4B400)
         em.set_thumbnail(url=self.thumbnail_url)
         await ctx.author.send(embed=em)
-        message = await self.bot.wait_for('message',
+        try:
+            msg = await self.bot.wait_for('message',
                                           check=msgcheck,
                                           timeout=60)
-        host_time = message.content
+        except asyncio.TimeoutError as e:
+            await ctx.author.send(
+                "You took too long to respond! Please restart the process by using `!market`"
+            )
+            log.info(e)
+        host_time = msg.clean_content
 
         em = discord.Embed(
             title="Turnip Stonks Bot",
-            description=
-            f"Ok! Any more info (e.g., {npc.capitalize()} location)?",
+            description=f"Ok! Any more info (e.g., {npc} location)?",
             color=0xF4B400)
         em.set_thumbnail(url=self.thumbnail_url)
         await ctx.author.send(embed=em)
-        message = await self.bot.wait_for('message',
+        try:
+            msg = await self.bot.wait_for('message',
                                           check=msgcheck,
                                           timeout=60)
-        npc_location = message.content
+        except asyncio.TimeoutError as e:
+            await ctx.author.send(
+                "You took too long to respond! Please restart the process by using `!market`"
+            )
+            log.info(e)
+        npc_location = msg.clean_content
 
         em = discord.Embed(
             title="Turnip Stonks Bot",
@@ -64,16 +118,22 @@ class Hosting(commands.Cog):
             color=0xF4B400)
         em.set_thumbnail(url=self.thumbnail_url)
         await ctx.author.send(embed=em)
-        message = await self.bot.wait_for('message',
+        try:
+            msg = await self.bot.wait_for('message',
                                           check=msgcheck,
                                           timeout=60)
-        turnip_url = message.content
+        except asyncio.TimeoutError as e:
+            await ctx.author.send(
+                "You took too long to respond! Please restart the process by using `!market`"
+            )
+            log.info(e)
+        turnip_url = msg.clean_content
 
         em = discord.Embed(title="Turnip Stonks Bot",
                            description="",
                            color=0xF4B400)
         em.set_thumbnail(url=self.thumbnail_url)
-        em.add_field(name="Host", value=f"{ctx.author}")
+        em.add_field(name="Host", value=f"<@{ctx.author.id}>")
         em.add_field(name="Duration:", value=host_time, inline=False)
         em.add_field(name="Turnip Exchange URL",
                      value=turnip_url,
@@ -82,15 +142,16 @@ class Hosting(commands.Cog):
                      value=npc_location,
                      inline=False)
 
-        await self.bot.get_channel(npc_dict[npc]).send(embed=em)
+        channel = int(os.getenv(hosting_opt.name))
+        await self.bot.get_channel(channel).send(embed=em)
 
         em = discord.Embed(
             title="Turnip Stonks Bot",
             description=
-            "Thank you for hosting! Your listing has been posted with the following details:",
+            f"Thanks! Check <#{channel}> for your listing. Here's the info you provided:",
             color=0xF4B400)
         em.set_thumbnail(url=self.thumbnail_url)
-        em.add_field(name="Host", value=f"{ctx.author}")
+        em.add_field(name="Host", value=f"<@{ctx.author.id}>")
         em.add_field(name="Duration:", value=host_time, inline=False)
         em.add_field(name="Turnip Exchange URL",
                      value=turnip_url,
@@ -100,102 +161,6 @@ class Hosting(commands.Cog):
                      inline=False)
 
         await ctx.author.send(embed=em)
-
-    @commands.group()
-    @checks.is_dm()
-    async def hosting(self, ctx: commands.Context):
-        if ctx.invoked_subcommand is None:
-            await ctx.author.send('Invalid hosting command passed...')
-
-    @hosting.command()
-    @checks.is_dm()
-    async def celeste(self, ctx):
-        """Let users host for Celeste"""
-        em = discord.Embed(
-            title="Turnip Stonks Bot",
-            description=
-            f"Hey <@{ctx.author.id}>!\n\nWant to invite some friends to see a meteor shower?"
-            f"\n\n :one: - Yes! Let's go!\n:two: - On the other hand...maybe not.",
-            color=0xF4B400)
-        em.set_thumbnail(url=self.thumbnail_url)
-        first_message = await ctx.author.send(embed=em)
-
-        for emoji in self.reaction_emojis:
-            await first_message.add_reaction(emoji)
-
-        def react_check(payload):
-            if payload.user_id != ctx.author.id:
-                return False
-
-            to_check = str(payload.emoji)
-            for emoji in self.reaction_emojis:
-                if to_check == emoji:
-                    return True
-            return False
-
-        try:
-            payload = await self.bot.wait_for('raw_reaction_add',
-                                              check=react_check,
-                                              timeout=60)
-            reaction = str(payload.emoji)
-            if reaction == self.reaction_emojis[0]:
-                await self.dialogue(ctx, 'celeste')
-            elif reaction == self.reaction_emojis[1]:
-                await ctx.author.send("Ok! Maybe another time!")
-            else:
-                await ctx.author.send(
-                    "Invalid reaction. Please restart the process by using `!hosting celeste`"
-                )
-        except asyncio.TimeoutError as e:
-            await ctx.author.send(
-                "You took too long to respond! Please restart the process by using `!hosting celeste`"
-            )
-            log.info(e)
-
-    @hosting.command()
-    @checks.is_dm()
-    async def redd(self, ctx):
-        """Let users host for Redd"""
-        em = discord.Embed(
-            title="Turnip Stonks Bot",
-            description=
-            f"Hey <@{ctx.author.id}>!\n\nWant to invite some friends to buy some art?"
-            f"\n\n :one: - Yes! Let's go!\n:two: - On the other hand...maybe not.",
-            color=0xF4B400)
-        em.set_thumbnail(url=self.thumbnail_url)
-        first_message = await ctx.author.send(embed=em)
-
-        for emoji in self.reaction_emojis:
-            await first_message.add_reaction(emoji)
-
-        def react_check(payload):
-            if payload.user_id != ctx.author.id:
-                return False
-
-            to_check = str(payload.emoji)
-            for emoji in self.reaction_emojis:
-                if to_check == emoji:
-                    return True
-            return False
-
-        try:
-            payload = await self.bot.wait_for('raw_reaction_add',
-                                              check=react_check,
-                                              timeout=60)
-            reaction = str(payload.emoji)
-            if reaction == self.reaction_emojis[0]:
-                await self.dialogue(ctx, 'redd')
-            elif reaction == self.reaction_emojis[1]:
-                await ctx.author.send("Ok! Maybe another time!")
-            else:
-                await ctx.author.send(
-                    "Invalid reaction. Please restart the process by using `!hosting redd`"
-                )
-        except asyncio.TimeoutError as e:
-            await ctx.author.send(
-                "You took too long to respond! Please restart the process by using `!hosting redd`"
-            )
-            log.info(e)
 
 
 def setup(bot):
