@@ -13,6 +13,9 @@ log = logging.getLogger(__name__)
 
 SERVER_ID = int(os.getenv('GUILD_ID'))
 NOOKAZON_CHANNEL = int(os.getenv('NOOKAZON_CHAN_ID'))
+CATALOG_CHANNEL = int(os.getenv('CATALOGING_CHAN_ID'))
+CRAFTING_CHANNEL = int(os.getenv('CRAFTING_CHAN_ID'))
+# RESIDENT_CHANNEL = int(os.getenv('RESIDENT_CHAN_ID'))
 
 
 class MarketChan(Enum):
@@ -379,6 +382,370 @@ class Market(commands.Cog):
                 await self.selling_dialogue(ctx, market_opt)
             elif reaction == self.reaction_emojis[2]:
                 await self.buying_dialogue(ctx, market_opt)
+            else:
+                await ctx.author.send(
+                    "Invalid reaction. Please restart the process by using `!market`"
+                )
+        except asyncio.TimeoutError as e:
+            await ctx.author.send(
+                "You took too long to respond! Please restart the process by using `!market`"
+            )
+            log.info(e)
+
+    async def catalog_offer(self, ctx: commands.Context):
+        def msgcheck(m: discord.Message):
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="Ok! What are you offering to catalog?",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+
+        msg = await self.bot.wait_for('message', check=msgcheck, timeout=60)
+        catalog_item = msg.clean_content
+
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=
+            "Please copy and paste your Turnip Exchange URL. (If you do not how know to create a Turnip "
+            "Exchange URL click [here]("
+            "https://discordapp.com/channels/{}/696847359514116156))".format(
+                SERVER_ID),
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+        msg = await self.bot.wait_for('message', check=msgcheck, timeout=60)
+        turnip_url = msg.clean_content
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="Ok! Any other information?",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+
+        msg = await self.bot.wait_for('message', check=msgcheck, timeout=60)
+        other_info = msg.clean_content
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em.add_field(name="User", value=f"<@{ctx.author.id}>")
+        em.add_field(name="Cataloging", value=catalog_item, inline=False)
+        em.add_field(name="Turnip Exchange URL",
+                     value=turnip_url,
+                     inline=False)
+        em.add_field(name="More Information", value=other_info, inline=False)
+
+        await self.bot.get_channel(CATALOG_CHANNEL).send(embed=em)
+
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=
+            f"Thanks! Check <#{CATALOG_CHANNEL}> for your listing. Here's the info you provided:",
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em.add_field(name="Cataloging", value=catalog_item, inline=False)
+        em.add_field(name="Turnip Exchange URL",
+                     value=turnip_url,
+                     inline=False)
+        em.add_field(name="More Information", value=other_info, inline=False)
+
+        await ctx.author.send(embed=em)
+
+    async def catalog_looking(self, ctx: commands.Context):
+        def msgcheck(m: discord.Message):
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="Ok! What are you looking to catalog?",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+
+        msg = await self.bot.wait_for('message', check=msgcheck, timeout=60)
+        catalog_item = msg.clean_content
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="Ok! Any other information?",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+
+        msg = await self.bot.wait_for('message', check=msgcheck, timeout=60)
+        other_info = msg.clean_content
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em.add_field(name="User", value=f"<@{ctx.author.id}>")
+        em.add_field(name="Looking to catalog",
+                     value=catalog_item,
+                     inline=False)
+        em.add_field(name="More Information", value=other_info, inline=False)
+
+        await self.bot.get_channel(CATALOG_CHANNEL).send(embed=em)
+
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=
+            f"Thanks! Check <#{CATALOG_CHANNEL}> for your listing. Here's the info you provided:",
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em.add_field(name="Looking to catalog",
+                     value=catalog_item,
+                     inline=False)
+        em.add_field(name="More Information", value=other_info, inline=False)
+
+        await ctx.author.send(embed=em)
+
+    @market.command()
+    @checks.is_dm()
+    async def catalog(self, ctx: commands.Context):
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=
+            f"Hey <@{ctx.author.id}>! Are you offering to catalog or looking to "
+            f"catalog an item?\n\n:one: - Offering!\n:two: - Looking!",
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em_message = await ctx.author.send(embed=em)
+
+        for emoji in self.reaction_emojis[:2]:
+            await em_message.add_reaction(emoji)
+
+        def react_check(payload):
+            if payload.user_id != ctx.author.id:
+                return False
+
+            to_check = str(payload.emoji)
+            for emoji in self.reaction_emojis:
+                if to_check == emoji:
+                    return True
+            return False
+
+        try:
+            payload = await self.bot.wait_for('raw_reaction_add',
+                                              check=react_check,
+                                              timeout=60)
+            reaction = str(payload.emoji)
+
+            if reaction == self.reaction_emojis[0]:
+                await self.catalog_offer(ctx)
+            elif reaction == self.reaction_emojis[1]:
+                await self.catalog_looking(ctx)
+            else:
+                await ctx.author.send(
+                    "Invalid reaction. Please restart the process by using `!market`"
+                )
+        except asyncio.TimeoutError as e:
+            await ctx.author.send(
+                "You took too long to respond! Please restart the process by using `!market`"
+            )
+            log.info(e)
+
+    async def crafting_offer(self, ctx: commands.Context):
+        def msgcheck(m: discord.Message):
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="Awesome! What are you crafting?",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+
+        msg = await self.bot.wait_for('message', check=msgcheck, timeout=60)
+        crafting_item = msg.clean_content
+
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=f"Ok! Do you need people to provide materials?\n\n"
+            f":one: - Yes\n:two: - No",
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em_message = await ctx.author.send(embed=em)
+
+        for emoji in self.reaction_emojis[:2]:
+            await em_message.add_reaction(emoji)
+
+        def react_check(payload):
+            if payload.user_id != ctx.author.id:
+                return False
+
+            to_check = str(payload.emoji)
+            for emoji in self.reaction_emojis:
+                if to_check == emoji:
+                    return True
+            return False
+
+        payload = await self.bot.wait_for('raw_reaction_add',
+                                          check=react_check,
+                                          timeout=60)
+        reaction = str(payload.emoji)
+
+        mats_req = "No"
+        if reaction == self.reaction_emojis[0]:
+            mats_req = "Yes"
+        else:
+            await ctx.author.send(
+                "Invalid reaction. Please restart the process by using `!market`"
+            )
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="Ok! Any other information?",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+
+        msg = await self.bot.wait_for('message', check=msgcheck, timeout=60)
+        other_info = msg.clean_content
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em.add_field(name="User", value=f"<@{ctx.author.id}>")
+        em.add_field(name="Offering to craft",
+                     value=crafting_item,
+                     inline=False)
+        em.add_field(name="Materials required?", value=mats_req, inline=False)
+        em.add_field(name="More Information", value=other_info, inline=False)
+
+        await self.bot.get_channel(CRAFTING_CHANNEL).send(embed=em)
+
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=
+            f"Thanks! Check <#{CRAFTING_CHANNEL}> for your listing. Here's the info you provided:",
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em.add_field(name="Offering to craft",
+                     value=crafting_item,
+                     inline=False)
+        em.add_field(name="Materials required?", value=mats_req, inline=False)
+        em.add_field(name="More Information", value=other_info, inline=False)
+
+        await ctx.author.send(embed=em)
+
+    async def crafting_looking(self, ctx: commands.Context):
+        def msgcheck(m: discord.Message):
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="Ok! What are you looking to craft?",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+
+        msg = await self.bot.wait_for('message', check=msgcheck, timeout=60)
+        crafting_item = msg.clean_content
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description=f"Ok! Can you provide materials?\n\n"
+                           f":one: - Yes\n:two: - No",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em_message = await ctx.author.send(embed=em)
+
+        for emoji in self.reaction_emojis[:2]:
+            await em_message.add_reaction(emoji)
+
+        def react_check(payload):
+            if payload.user_id != ctx.author.id:
+                return False
+
+            to_check = str(payload.emoji)
+            for emoji in self.reaction_emojis:
+                if to_check == emoji:
+                    return True
+            return False
+
+        payload = await self.bot.wait_for('raw_reaction_add',
+                                          check=react_check,
+                                          timeout=60)
+        reaction = str(payload.emoji)
+
+        mats_req = "No"
+        if reaction == self.reaction_emojis[0]:
+            mats_req = "Yes"
+        else:
+            await ctx.author.send(
+                "Invalid reaction. Please restart the process by using `!market`"
+            )
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="Ok! Any other information?",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+
+        msg = await self.bot.wait_for('message', check=msgcheck, timeout=60)
+        other_info = msg.clean_content
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em.add_field(name="User", value=f"<@{ctx.author.id}>")
+        em.add_field(name="Looking to craft",
+                     value=crafting_item,
+                     inline=False)
+        em.add_field(name="Materials provided?", value=mats_req, inline=False)
+        em.add_field(name="More Information", value=other_info, inline=False)
+
+        await self.bot.get_channel(CRAFTING_CHANNEL).send(embed=em)
+
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=
+            f"Thanks! Check <#{CRAFTING_CHANNEL}> for your listing. Here's the info you provided:",
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em.add_field(name="Looking to craft",
+                     value=crafting_item,
+                     inline=False)
+        em.add_field(name="Materials provided?", value=mats_req, inline=False)
+        em.add_field(name="More Information", value=other_info, inline=False)
+
+        await ctx.author.send(embed=em)
+
+    @market.command()
+    @checks.is_dm()
+    async def crafting(self, ctx: commands.Context):
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=
+            f"Hey <@{ctx.author.id}>! Are you offering to craft or do you need "
+            f"something crafts?\n\n:one: - Offering!\n:two: - Looking!",
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em_message = await ctx.author.send(embed=em)
+
+        for emoji in self.reaction_emojis[:2]:
+            await em_message.add_reaction(emoji)
+
+        def react_check(payload):
+            if payload.user_id != ctx.author.id:
+                return False
+
+            to_check = str(payload.emoji)
+            for emoji in self.reaction_emojis:
+                if to_check == emoji:
+                    return True
+            return False
+
+        try:
+            payload = await self.bot.wait_for('raw_reaction_add',
+                                              check=react_check,
+                                              timeout=60)
+            reaction = str(payload.emoji)
+
+            if reaction == self.reaction_emojis[0]:
+                await self.crafting_offer(ctx)
+            elif reaction == self.reaction_emojis[1]:
+                await self.crafting_looking(ctx)
             else:
                 await ctx.author.send(
                     "Invalid reaction. Please restart the process by using `!market`"
