@@ -87,7 +87,7 @@ class Stonks(commands.Cog):
                            description="",
                            color=0xF4B400)
         em.set_thumbnail(url=self.thumbnail_url)
-        em.add_field(name="Stonk Broker", value=f"{ctx.author}")
+        em.add_field(name="Stonk Broker", value=f"<@{ctx.author.id}>")
         em.add_field(name="Price", value=turnip_price, inline=False)
         em.add_field(name="Turnip Exchange URL",
                      value=turnip_url,
