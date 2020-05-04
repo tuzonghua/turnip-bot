@@ -37,6 +37,10 @@ class Hosting(commands.Cog):
     @commands.command()
     @checks.is_dm()
     async def hosting(self, ctx: commands.Context):
+        """Post NPCs that are on your island.
+
+        Choose from Celeste, Redd, Leif, and Saharah.
+        """
         def msgcheck(m: discord.Message):
             return m.author == ctx.author and m.channel == ctx.channel
 
@@ -154,7 +158,7 @@ class Hosting(commands.Cog):
                            color=0xF4B400)
         em.set_thumbnail(url=self.thumbnail_url)
         em.add_field(name="Host", value=f"<@{ctx.author.id}>")
-        em.add_field(name="Duration:", value=host_time, inline=False)
+        em.add_field(name="Duration", value=host_time, inline=False)
         em.add_field(name="Turnip Exchange URL",
                      value=turnip_url,
                      inline=False)
@@ -172,7 +176,7 @@ class Hosting(commands.Cog):
             color=0xF4B400)
         em.set_thumbnail(url=self.thumbnail_url)
         em.add_field(name="Host", value=f"<@{ctx.author.id}>")
-        em.add_field(name="Duration:", value=host_time, inline=False)
+        em.add_field(name="Duration", value=host_time, inline=False)
         em.add_field(name="Turnip Exchange URL",
                      value=turnip_url,
                      inline=False)

@@ -48,12 +48,17 @@ class Market(commands.Cog):
     @commands.group()
     @checks.is_dm()
     async def market(self, ctx: commands.Context):
+        """All things market related.
+
+        You must pass in a valid subcommand.
+        """
         if ctx.subcommand_passed is None:
             await ctx.send_help(ctx.command)
 
     @market.command()
     @checks.is_dm()
     async def nookazon(self, ctx: commands.Context):
+        """Post your Nookazon profile"""
         def msgcheck(m: discord.Message):
             return m.author == ctx.author and m.channel == ctx.channel
 
@@ -321,6 +326,7 @@ class Market(commands.Cog):
     @market.command()
     @checks.is_dm()
     async def list(self, ctx: commands.Context):
+        """List items for trade/sale/want to buy"""
         def msgcheck(m: discord.Message):
             return m.author == ctx.author and m.channel == ctx.channel
 
@@ -520,6 +526,7 @@ class Market(commands.Cog):
     @market.command()
     @checks.is_dm()
     async def catalog(self, ctx: commands.Context):
+        """Post items you want to catalog or are offering to catalog."""
         em = discord.Embed(
             title="Turnip Stonks Bot",
             description=
@@ -747,6 +754,7 @@ class Market(commands.Cog):
     @market.command()
     @checks.is_dm()
     async def crafting(self, ctx: commands.Context):
+        """Post items you want crafted or are looking to craft."""
         em = discord.Embed(
             title="Turnip Stonks Bot",
             description=
@@ -1002,6 +1010,11 @@ class Market(commands.Cog):
     @market.command()
     @checks.is_dm()
     async def residents(self, ctx: commands.Context):
+        """Looking for Raymond? Want to get rid of Hopkins?
+
+        Use this command to post residents in boxes or to look
+        for your next dream villager.
+        """
         em = discord.Embed(
             title="Turnip Stonks Bot",
             description=

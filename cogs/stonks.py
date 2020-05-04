@@ -128,7 +128,7 @@ class Stonks(commands.Cog):
     @commands.command()
     @checks.is_dm()
     async def stonks(self, ctx):
-        """Let users list turnips for sale/purchase"""
+        """List turnips for sale or purchase"""
         em = discord.Embed(
             title="Turnip Stonks Bot",
             description=
