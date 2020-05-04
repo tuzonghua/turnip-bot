@@ -20,9 +20,13 @@ class Stonks(commands.Cog):
         self.thumbnail_url = 'https://i.imgur.com/xJOaRAP.png'
 
     async def cog_command_error(self, ctx, error):
-        await ctx.author.send(
-            "There was an error, please restart the process by using `!stonks`"
-        )
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=
+            "There was an error. Please restart the process by using `!stonks`",
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        return await ctx.author.send(embed=em)
 
     async def dialogue(self, ctx, buy=True):
         def msgcheck(m):
@@ -45,7 +49,7 @@ class Stonks(commands.Cog):
             message = await self.bot.wait_for('message',
                                               check=msgcheck,
                                               timeout=60)
-            if message.cleant_content.isdigit():
+            if message.clean_content.isdigit():
                 turnip_price = message.clean_content
                 break
 
@@ -53,8 +57,12 @@ class Stonks(commands.Cog):
                 f"Price can only be digits. {4 - i} tries remaining.")
 
         if not turnip_price:
-            raise commands.CommandError(
-                "Too many retries, please restart the process.")
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description="Too many retries, please restart the process.",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
 
         em = discord.Embed(
             title="Turnip Stonks Bot",
@@ -153,14 +161,21 @@ class Stonks(commands.Cog):
             elif reaction == self.reaction_emojis[1]:
                 await self.dialogue(ctx, buy=True)
             else:
-                await ctx.author.send(
-                    "Invalid reaction. Please restart the process by using `!stonks`"
-                )
-        except asyncio.TimeoutError as e:
-            await ctx.author.send(
-                "You took too long to respond! Please restart the process by using `!stonks`"
-            )
-            log.info(e)
+                em = discord.Embed(
+                    title="Turnip Stonks Bot",
+                    description=
+                    "Invalid reaction. Please restart the process by using `!stonks`",
+                    color=0xF4B400)
+                em.set_thumbnail(url=self.thumbnail_url)
+                return await ctx.author.send(embed=em)
+        except asyncio.TimeoutError:
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=
+                "You took too long to respond! Please restart the process by using `!stonks`",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
 
 
 def setup(bot):

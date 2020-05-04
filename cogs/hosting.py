@@ -10,8 +10,6 @@ import discord
 log = logging.getLogger(__name__)
 
 SERVER_ID = int(os.getenv('GUILD_ID'))
-CELESTE_CHAN = int(os.getenv('CELESTE_HOST_CHAN_ID'))
-REDD_CHAN = int(os.getenv('REDD_HOST_CHAN_ID'))
 
 
 class HostingChan(Enum):
@@ -28,9 +26,13 @@ class Hosting(commands.Cog):
 
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.author.send(
-                "There was an error, please restart the process by using `!hosting`"
-            )
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=
+                "There was an error. Please restart the process by using `!hosting`",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
 
     @commands.command()
     @checks.is_dm()
@@ -56,11 +58,14 @@ class Hosting(commands.Cog):
                 msg = await self.bot.wait_for('message',
                                               check=msgcheck,
                                               timeout=60)
-            except asyncio.TimeoutError as e:
-                await ctx.author.send(
-                    "You took too long to respond! Please restart the process by using `!market`"
-                )
-                log.info(e)
+            except asyncio.TimeoutError:
+                em = discord.Embed(
+                    title="Turnip Stonks Bot",
+                    description=
+                    "You took too long to respond! Please restart the process by using `!hosting`",
+                    color=0xF4B400)
+                em.set_thumbnail(url=self.thumbnail_url)
+                return await ctx.author.send(embed=em)
             if msg.clean_content.isdigit() and 1 <= int(
                     msg.clean_content) <= 4:
                 hosting_opt = HostingChan(int(msg.clean_content))
@@ -69,7 +74,13 @@ class Hosting(commands.Cog):
 
             num_tries = 4 - i
             if num_tries == 0:
-                raise commands.CommandError("Too many retries")
+                em = discord.Embed(
+                    title="Turnip Stonks Bot",
+                    description=
+                    "Too many retries. Please restart the process by using `!hosting`",
+                    color=0xF4B400)
+                em.set_thumbnail(url=self.thumbnail_url)
+                return await ctx.author.send(embed=em)
             await ctx.author.send(
                 f"Option can only be a digit between 1 and 4. {num_tries} tries remaining."
             )
@@ -84,11 +95,14 @@ class Hosting(commands.Cog):
             msg = await self.bot.wait_for('message',
                                           check=msgcheck,
                                           timeout=60)
-        except asyncio.TimeoutError as e:
-            await ctx.author.send(
-                "You took too long to respond! Please restart the process by using `!market`"
-            )
-            log.info(e)
+        except asyncio.TimeoutError:
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=
+                "You took too long to respond! Please restart the process by using `!hosting`",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
         host_time = msg.clean_content
 
         em = discord.Embed(
@@ -102,10 +116,13 @@ class Hosting(commands.Cog):
                                           check=msgcheck,
                                           timeout=60)
         except asyncio.TimeoutError as e:
-            await ctx.author.send(
-                "You took too long to respond! Please restart the process by using `!market`"
-            )
-            log.info(e)
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=
+                "You took too long to respond! Please restart the process by using `!hosting`",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
         npc_location = msg.clean_content
 
         em = discord.Embed(
@@ -122,11 +139,14 @@ class Hosting(commands.Cog):
             msg = await self.bot.wait_for('message',
                                           check=msgcheck,
                                           timeout=60)
-        except asyncio.TimeoutError as e:
-            await ctx.author.send(
-                "You took too long to respond! Please restart the process by using `!market`"
-            )
-            log.info(e)
+        except asyncio.TimeoutError:
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=
+                "You took too long to respond! Please restart the process by using `!hosting`",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
         turnip_url = msg.clean_content
 
         em = discord.Embed(title="Turnip Stonks Bot",

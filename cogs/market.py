@@ -2,8 +2,6 @@ import asyncio
 from enum import Enum
 import logging
 import os
-import sys
-import traceback
 
 from discord.ext import commands
 from .utils import checks
@@ -15,7 +13,7 @@ SERVER_ID = int(os.getenv('GUILD_ID'))
 NOOKAZON_CHANNEL = int(os.getenv('NOOKAZON_CHAN_ID'))
 CATALOG_CHANNEL = int(os.getenv('CATALOGING_CHAN_ID'))
 CRAFTING_CHANNEL = int(os.getenv('CRAFTING_CHAN_ID'))
-# RESIDENT_CHANNEL = int(os.getenv('RESIDENT_CHAN_ID'))
+RESIDENT_CHANNEL = int(os.getenv('RESIDENT_CHAN_ID'))
 
 
 class MarketChan(Enum):
@@ -39,21 +37,19 @@ class Market(commands.Cog):
         self.thumbnail_url = 'https://i.imgur.com/xJOaRAP.png'
 
     async def cog_command_error(self, ctx, error):
-        traceback.print_exception(type(error),
-                                  error,
-                                  error.__traceback__,
-                                  file=sys.stderr)
-        await ctx.author.send(
-            f"There was an error, please restart the process by using `!market`: {error}"
-        )
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=
+            "There was an error! Please restart the process by using `!market`",
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        return await ctx.author.send(embed=em)
 
     @commands.group()
     @checks.is_dm()
     async def market(self, ctx: commands.Context):
-        if ctx.invoked_subcommand is None:
-            await ctx.author.send(
-                'Invalid market command passed. Please use a valid subcommand. Message with `!help '
-                'market` for options.')
+        if ctx.subcommand_passed is None:
+            await ctx.send_help(ctx.command)
 
     @market.command()
     @checks.is_dm()
@@ -209,8 +205,12 @@ class Market(commands.Cog):
                 f"Price can only be digits. {4 - i} tries remaining.")
 
         if not item_price:
-            raise commands.CommandError(
-                "Too many retries, please restart the process.")
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description="Too many retries, please restart the process.",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
 
         em = discord.Embed(title="Turnip Stonks Bot",
                            description="Any other details?",
@@ -278,8 +278,12 @@ class Market(commands.Cog):
                 f"Price can only be digits. {4 - i} tries remaining.")
 
         if not item_price:
-            raise commands.CommandError(
-                "Too many retries, please restart the process.")
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description="Too many retries, please restart the process.",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
 
         em = discord.Embed(title="Turnip Stonks Bot",
                            description="Any other details?",
@@ -345,7 +349,12 @@ class Market(commands.Cog):
 
             num_tries = 4 - i
             if num_tries == 0:
-                raise commands.CommandError("Too many retries")
+                em = discord.Embed(
+                    title="Turnip Stonks Bot",
+                    description="Too many retries, please restart the process.",
+                    color=0xF4B400)
+                em.set_thumbnail(url=self.thumbnail_url)
+                return await ctx.author.send(embed=em)
             await ctx.author.send(
                 f"Option can only be a digit between 1 and 9. {num_tries} tries remaining."
             )
@@ -383,14 +392,21 @@ class Market(commands.Cog):
             elif reaction == self.reaction_emojis[2]:
                 await self.buying_dialogue(ctx, market_opt)
             else:
-                await ctx.author.send(
-                    "Invalid reaction. Please restart the process by using `!market`"
-                )
-        except asyncio.TimeoutError as e:
-            await ctx.author.send(
-                "You took too long to respond! Please restart the process by using `!market`"
-            )
-            log.info(e)
+                em = discord.Embed(
+                    title="Turnip Stonks Bot",
+                    description=
+                    "Invalid reaction. Please restart the process by using `!market`",
+                    color=0xF4B400)
+                em.set_thumbnail(url=self.thumbnail_url)
+                return await ctx.author.send(embed=em)
+        except asyncio.TimeoutError:
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=
+                "You took too long to respond! Please restart the process by using `!market`",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
 
     async def catalog_offer(self, ctx: commands.Context):
         def msgcheck(m: discord.Message):
@@ -537,14 +553,21 @@ class Market(commands.Cog):
             elif reaction == self.reaction_emojis[1]:
                 await self.catalog_looking(ctx)
             else:
-                await ctx.author.send(
-                    "Invalid reaction. Please restart the process by using `!market`"
-                )
-        except asyncio.TimeoutError as e:
-            await ctx.author.send(
-                "You took too long to respond! Please restart the process by using `!market`"
-            )
-            log.info(e)
+                em = discord.Embed(
+                    title="Turnip Stonks Bot",
+                    description=
+                    "Invalid reaction! Please restart the process by using `!market`",
+                    color=0xF4B400)
+                em.set_thumbnail(url=self.thumbnail_url)
+                return await ctx.author.send(embed=em)
+        except asyncio.TimeoutError:
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=
+                "You took too long to respond! Please restart the process by using `!market`",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
 
     async def crafting_offer(self, ctx: commands.Context):
         def msgcheck(m: discord.Message):
@@ -589,9 +612,13 @@ class Market(commands.Cog):
         if reaction == self.reaction_emojis[0]:
             mats_req = "Yes"
         else:
-            await ctx.author.send(
-                "Invalid reaction. Please restart the process by using `!market`"
-            )
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=
+                "Invalid reaction! Please restart the process by using `!market`",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
 
         em = discord.Embed(title="Turnip Stonks Bot",
                            description="Ok! Any other information?",
@@ -670,10 +697,16 @@ class Market(commands.Cog):
         mats_req = "No"
         if reaction == self.reaction_emojis[0]:
             mats_req = "Yes"
+        elif reaction == self.reaction_emojis[1]:
+            pass
         else:
-            await ctx.author.send(
-                "Invalid reaction. Please restart the process by using `!market`"
-            )
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=
+                "Invalid reaction! Please restart the process by using `!market`",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
 
         em = discord.Embed(title="Turnip Stonks Bot",
                            description="Ok! Any other information?",
@@ -747,14 +780,276 @@ class Market(commands.Cog):
             elif reaction == self.reaction_emojis[1]:
                 await self.crafting_looking(ctx)
             else:
-                await ctx.author.send(
-                    "Invalid reaction. Please restart the process by using `!market`"
-                )
-        except asyncio.TimeoutError as e:
-            await ctx.author.send(
-                "You took too long to respond! Please restart the process by using `!market`"
-            )
-            log.info(e)
+                em = discord.Embed(
+                    title="Turnip Stonks Bot",
+                    description=
+                    "Invalid reaction! Please restart the process by using `!market`",
+                    color=0xF4B400)
+                em.set_thumbnail(url=self.thumbnail_url)
+                return await ctx.author.send(embed=em)
+        except asyncio.TimeoutError:
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=
+                "You took too long to respond! Please restart the process by using `!market`",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
+
+    async def resident_offer(self, ctx: commands.Context):
+        def msgcheck(m: discord.Message):
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="Ok! Who are you offering?",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+
+        msg = await self.bot.wait_for('message', check=msgcheck, timeout=60)
+        resident = msg.clean_content
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description=f"Ok! Are they in boxes?\n\n"
+                           f":one: - Yes\n:two: - No",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em_message = await ctx.author.send(embed=em)
+
+        for emoji in self.reaction_emojis[:2]:
+            await em_message.add_reaction(emoji)
+
+        def react_check(payload):
+            if payload.user_id != ctx.author.id:
+                return False
+
+            to_check = str(payload.emoji)
+            for emoji in self.reaction_emojis:
+                if to_check == emoji:
+                    return True
+            return False
+
+        payload = await self.bot.wait_for('raw_reaction_add',
+                                          check=react_check,
+                                          timeout=60)
+        reaction = str(payload.emoji)
+        asking_for = None
+        other_info = None
+        if reaction == self.reaction_emojis[0]:
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=f"Ok! Are you asking for anything in return?\n\n"
+                f":one: - Yes\n:two: - No",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            em_message = await ctx.author.send(embed=em)
+
+            for emoji in self.reaction_emojis[:2]:
+                await em_message.add_reaction(emoji)
+
+            payload = await self.bot.wait_for('raw_reaction_add',
+                                              check=react_check,
+                                              timeout=60)
+            ret_reaction = str(payload.emoji)
+
+            if ret_reaction == self.reaction_emojis[0]:
+                em = discord.Embed(title="Turnip Stonks Bot",
+                                   description="Ok! What are you asking for?",
+                                   color=0xF4B400)
+                em.set_thumbnail(url=self.thumbnail_url)
+                await ctx.author.send(embed=em)
+
+                msg = await self.bot.wait_for('message',
+                                              check=msgcheck,
+                                              timeout=60)
+                asking_for = msg.clean_content
+
+                em = discord.Embed(title="Turnip Stonks Bot",
+                                   description="Ok! Any other information?",
+                                   color=0xF4B400)
+                em.set_thumbnail(url=self.thumbnail_url)
+                await ctx.author.send(embed=em)
+
+                msg = await self.bot.wait_for('message',
+                                              check=msgcheck,
+                                              timeout=60)
+                other_info = msg.clean_content
+            elif ret_reaction == self.reaction_emojis[1]:
+                em = discord.Embed(title="Turnip Stonks Bot",
+                                   description="Ok! Any other information?",
+                                   color=0xF4B400)
+                em.set_thumbnail(url=self.thumbnail_url)
+                await ctx.author.send(embed=em)
+
+                msg = await self.bot.wait_for('message',
+                                              check=msgcheck,
+                                              timeout=60)
+                other_info = msg.clean_content
+            else:
+                em = discord.Embed(
+                    title="Turnip Stonks Bot",
+                    description=
+                    "Invalid reaction! Please restart the process by using `!market`",
+                    color=0xF4B400)
+                em.set_thumbnail(url=self.thumbnail_url)
+                return await ctx.author.send(embed=em)
+        elif reaction == self.reaction_emojis[1]:
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=
+                "Sorry! Residents must be in boxes first before listing!",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
+        else:
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=
+                "Invalid reaction. Please restart the process by using `!market`",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em.add_field(name="User", value=f"<@{ctx.author.id}>")
+        em.add_field(name="Offering resident", value=resident, inline=False)
+        if asking_for:
+            em.add_field(name="Asking for", value=asking_for, inline=False)
+        if other_info:
+            em.add_field(name="More Information",
+                         value=other_info,
+                         inline=False)
+
+        await self.bot.get_channel(RESIDENT_CHANNEL).send(embed=em)
+
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=
+            f"Thanks! Check <#{RESIDENT_CHANNEL}> for your listing. Here's the info you provided:",
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em.add_field(name="Offering resident", value=resident, inline=False)
+        if asking_for:
+            em.add_field(name="Asking for", value=asking_for, inline=False)
+        if other_info:
+            em.add_field(name="More Information",
+                         value=other_info,
+                         inline=False)
+
+        await ctx.author.send(embed=em)
+
+    async def resident_looking(self, ctx: commands.Context):
+        def msgcheck(m: discord.Message):
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description=f"Ok! Who are you looking for?",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+
+        msg = await self.bot.wait_for('message', check=msgcheck, timeout=60)
+        resident = msg.clean_content
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="Ok! Offering anything in return?",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+
+        msg = await self.bot.wait_for('message', check=msgcheck, timeout=60)
+        trade = msg.clean_content
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="Ok! Any other information?",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        await ctx.author.send(embed=em)
+
+        msg = await self.bot.wait_for('message', check=msgcheck, timeout=60)
+        other_info = msg.clean_content
+
+        em = discord.Embed(title="Turnip Stonks Bot",
+                           description="",
+                           color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em.add_field(name="User", value=f"<@{ctx.author.id}>")
+        em.add_field(name="In search of resident",
+                     value=resident,
+                     inline=False)
+        em.add_field(name="Trades?", value=trade, inline=False)
+        em.add_field(name="More Information", value=other_info, inline=False)
+
+        await self.bot.get_channel(RESIDENT_CHANNEL).send(embed=em)
+
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=
+            f"Thanks! Check <#{RESIDENT_CHANNEL}> for your listing. Here's the info you provided:",
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em.add_field(name="In search of resident",
+                     value=resident,
+                     inline=False)
+        em.add_field(name="Trades?", value=trade, inline=False)
+        em.add_field(name="More Information", value=other_info, inline=False)
+
+        await ctx.author.send(embed=em)
+
+    @market.command()
+    @checks.is_dm()
+    async def residents(self, ctx: commands.Context):
+        em = discord.Embed(
+            title="Turnip Stonks Bot",
+            description=
+            f"Hey <@{ctx.author.id}>! Are you offering a resident or "
+            f"looking for a resident?\n\n:one: - Offering!\n:two: - Looking!",
+            color=0xF4B400)
+        em.set_thumbnail(url=self.thumbnail_url)
+        em_message = await ctx.author.send(embed=em)
+
+        for emoji in self.reaction_emojis[:2]:
+            await em_message.add_reaction(emoji)
+
+        def react_check(payload):
+            if payload.user_id != ctx.author.id:
+                return False
+
+            to_check = str(payload.emoji)
+            for emoji in self.reaction_emojis:
+                if to_check == emoji:
+                    return True
+            return False
+
+        try:
+            payload = await self.bot.wait_for('raw_reaction_add',
+                                              check=react_check,
+                                              timeout=60)
+            reaction = str(payload.emoji)
+
+            if reaction == self.reaction_emojis[0]:
+                await self.resident_offer(ctx)
+            elif reaction == self.reaction_emojis[1]:
+                await self.resident_looking(ctx)
+            else:
+                em = discord.Embed(
+                    title="Turnip Stonks Bot",
+                    description=
+                    "Invalid reaction! Please restart the process by using `!market`",
+                    color=0xF4B400)
+                em.set_thumbnail(url=self.thumbnail_url)
+                return await ctx.author.send(embed=em)
+        except asyncio.TimeoutError:
+            em = discord.Embed(
+                title="Turnip Stonks Bot",
+                description=
+                "You took too long to respond! Please restart the process by using `!market`",
+                color=0xF4B400)
+            em.set_thumbnail(url=self.thumbnail_url)
+            return await ctx.author.send(embed=em)
 
 
 def setup(bot):
